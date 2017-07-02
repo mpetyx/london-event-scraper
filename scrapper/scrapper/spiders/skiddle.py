@@ -1,19 +1,37 @@
-import scrapy
+from __future__ import absolute_import
+
+from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import Identity
+from scrapy.spiders import Rule
+
+from ..utils.spiders import BasePortiaSpider
+from ..utils.starturls import FeedGenerator, FragmentGenerator
+from ..utils.processors import Item, Field, Text, Number, Price, Date, Url, Image, Regex
+from ..items import PortiaItem
 
 
-class QuotesSpider(scrapy.Spider):
-    name = "quotes"
-
-    def start_requests(self):
-        urls = [
-            'https://www.skiddle.com/whats-on/London/',
-        ]
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
-
-    def parse(self, response):
-        page = response.url.split("/")[-2]
-        filename = 'quotes-%s.html' % page
-        with open(filename, 'wb') as f:
-            f.write(response.body)
-        self.log('Saved file %s' % filename)
+class Skiddle(BasePortiaSpider):
+    name = "skiddle"
+    allowed_domains = [u'www.skiddle.com']
+    start_urls = [u'https://www.skiddle.com/whats-on/London/']
+    rules = [
+        Rule(
+            LinkExtractor(
+                allow=('.*'),
+                deny=()
+            ),
+            callback='parse_item',
+            follow=True
+        )
+    ]
+    items = [
+        [
+            Item(
+                PortiaItem, None, '', [
+                    Field(
+                        u'image', '', []), Field(
+                        u'title', '', []), Field(
+                            u'location', '', []), Field(
+                                u'date', '', [])])]]
